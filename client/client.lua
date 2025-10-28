@@ -1,69 +1,95 @@
-ESX = nil
+-- =================================================================
+-- Oryginalny kod dostarczony przez użytkownika
+-- =================================================================
 
-Citizen.CreateThread(function()
-    while ESX == nil do
-        TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-        Citizen.Wait(0)
-    end
+function notification(icon, appname, title, message, time, sound)
+	if sound == nil then
+		sound = 'default'
+	end
+	SendNUIMessage({
+		action = 'open',
+		sound = sound,
+		icon = icon,
+		title = title,
+		message = message,
+		time = time,
+		appname = appname
+	})
+end
+
+-- Ta funkcja wydaje się być specyficznym wariantem, zostawiam ją,
+-- ponieważ może być używana przez inne Twoje skrypty.
+function specjalcwel(title, text, time)
+	if sound == nil then
+		sound = 'default'
+	end
+	SendNUIMessage({
+		action = 'open',
+		sound = sound,
+		icon = 'fas fa-exclamation-circle text-danger',
+		title = title,
+		message = text,
+		time = time,
+		appname = 'Marolli-Scripts'
+	})
+end
+
+RegisterNetEvent('notification:show')
+AddEventHandler('notification:show', function(icon, appname, title, message, time, sound)
+	notification(icon, appname, title, message, time, sound)
 end)
 
---[[
-    Super Inteligentny Tłumacz Powiadomień (Wersja Ostateczna)
-    Ta funkcja jest odporna na różne, nawet nietypowe formaty wywołań
-    ze starych i niestandardowych skryptów.
-]]
-local function showSuperIntelligentNotification(...)
-    local args = table.pack(...)
-    local data = {}
-    local validTypes = { success = true, error = true, warning = true, info = true }
+-- Eksport nowej funkcji, aby inne skrypty mogły z niej korzystać
+exports('Notification', notification)
+exports('Specjal', specjalcwel)
 
-    -- Case 1: Nowoczesne wywołanie z jedną tabelą danych (najlepszy przypadek)
-    if args.n == 1 and type(args[1]) == 'table' then
-        data = args[1]
-    else -- Case 2: Starsze wywołania z pojedynczymi argumentami
-        if args.n == 1 then
-            -- Jeden argument to ZAWSZE treść wiadomości.
-            data.message = tostring(args[1])
-        elseif args.n == 2 then
-            local arg1 = tostring(args[1])
-            local arg2 = tostring(args[2])
-            -- Sprawdzamy, czy drugi argument jest liczbą (czyli czasem trwania)
-            if tonumber(arg2) then
-                -- Jeśli tak, to pierwszy argument jest treścią, a drugi ignorujemy.
-                data.message = arg1
-            -- Sprawdzamy, czy drugi argument jest prawidłowym typem
-            elseif validTypes[arg2] then
-                -- Jeśli tak, to mamy (treść, typ).
-                data.message = arg1
-                data.type = arg2
-            else
-                -- W każdym innym przypadku, traktujemy to jako (tytuł, treść).
-                data.title = arg1
-                data.message = arg2
-            end
-        elseif args.n >= 3 then
-            -- Trzy lub więcej argumentów to prawie zawsze (tytuł, treść, typ).
-            data.title = tostring(args[1])
-            data.message = tostring(args[2])
-            data.type = tostring(args[3])
+
+-- =================================================================
+-- Warstwa Kompatybilności by Jules (Tłumacz Starego na Nowe)
+-- =================================================================
+
+local function showCompatibilityNotification(...)
+    local args = table.pack(...)
+    local message = "Brak treści."
+    local title = "Powiadomienie"
+    -- Domyślna ikona, jeśli typ nie zostanie rozpoznany
+    local icon = 'fas fa-info-circle text-info'
+    local time = 7000 -- Domyślny czas wyświetlania dla starych powiadomień
+
+    -- Mapa tłumacząca stare typy ESX na ikony Font Awesome i kolory Bootstrap
+    local typeToIconMap = {
+        ['success'] = 'far fa-check-circle text-success',
+        ['error'] = 'fas fa-exclamation-circle text-danger',
+        ['info'] = 'fas fa-info-circle text-info',
+        ['warning'] = 'fas fa-exclamation-triangle text-warning',
+        -- Dodatkowe mapowanie dla bardzo starych skryptów
+        ['~g~'] = 'far fa-check-circle text-success',
+        ['~r~'] = 'fas fa-exclamation-circle text-danger',
+        ['~b~'] = 'fas fa-info-circle text-info',
+        ['~y~'] = 'fas fa-exclamation-triangle text-warning'
+    }
+
+    if args.n == 1 then
+        -- Przypadek 1: esx:showNotification("Wiadomość")
+        message = tostring(args[1])
+    elseif args.n >= 2 then
+        -- Sprawdzamy, czy drugi argument to rozpoznawalny typ
+        if typeToIconMap[tostring(args[2])] then
+            -- Przypadek 2: esx:showNotification("Wiadomość", "error")
+            message = tostring(args[1])
+            icon = typeToIconMap[tostring(args[2])]
+        else
+            -- Przypadek 3: Domyślnie traktujemy jako ("Tytuł", "Wiadomość")
+            title = tostring(args[1])
+            message = tostring(args[2])
         end
     end
 
-    -- Ostateczne ustawienie wartości domyślnych, aby NUI nigdy nie otrzymało pustych danych.
-    data.action = 'showNotification'
-    data.title = data.title or 'Powiadomienie'
-    data.message = data.message or 'Brak treści.'
-    data.type = data.type or 'info'
-
-    -- Filtr "anty-śmieciowy": Ignoruj powiadomienia, gdzie tytuł i treść to tylko liczby.
-    if tonumber(data.title) and tonumber(data.message) then
-        return
-    end
-
-    SendNUIMessage(data)
+    -- Wywołujemy nową funkcję `notification` z przetłumaczonymi danymi
+    notification(icon, "System", title, message, time, nil)
 end
 
--- Wszystkie drogi prowadzą do naszego nowego, inteligentnego "tłumacza"
-RegisterNetEvent('esx:showNotification', showSuperIntelligentNotification)
-RegisterNetEvent('jules-notify:showNotification', showSuperIntelligentNotification)
-exports('Notify', showSuperIntelligentNotification)
+-- Przechwytujemy stare eventy i exporty, kierując je do naszego tłumacza
+RegisterNetEvent('esx:showNotification', showCompatibilityNotification)
+RegisterNetEvent('jules-notify:showNotification', showCompatibilityNotification) -- Dla pewności
+exports('Notify', showCompatibilityNotification) -- Dla kompatybilności z `es_extended`

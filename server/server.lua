@@ -1,36 +1,20 @@
--- Zaktualizowana komenda do testowania nowych powiadomień
+-- Ten plik jest po stronie serwera.
+-- Główna logika znajduje się w client/client.lua
+
+-- Komenda do łatwego testowania nowego systemu powiadomień
 RegisterCommand('testnotify', function(source, args, rawCommand)
     local src = source
 
-    local notifications = {
-        {
-            title = 'Sukces',
-            message = 'Operacja zakończyła się pomyślnie. Gratulacje!',
-            type = 'success'
-        },
-        {
-            title = 'Błąd Krytyczny',
-            message = 'Nie udało się połączyć z serwerem. Sprawdź swoje połączenie.',
-            type = 'error'
-        },
-        {
-            title = 'Informacja',
-            message = 'Serwer zostanie zrestartowany za 15 minut. Zapisz swoje postępy.',
-            type = 'info'
-        },
-        {
-            title = 'Ostrzeżenie',
-            message = 'Twoje konto bankowe jest na minusie. Spłać dług jak najszybciej.',
-            type = 'warning'
-        }
-    }
+    -- Wywołujemy nowe, niestandardowe zdarzenie, aby pokazać pełne możliwości
+    TriggerClientEvent('notification:show', src,
+        'fab fa-twitter text-info', -- Ikona (Font Awesome + kolor Bootstrap)
+        'Twitter', -- Nazwa aplikacji
+        'Nowe Powiadomienie!', -- Tytuł
+        'Witaj w nowym systemie powiadomień w stylu iOS! Mamy nadzieję, że Ci się podoba.', -- Treść wiadomości
+        10000, -- Czas wyświetlania w milisekundach (10 sekund)
+        'not1' -- Dźwięk (opcjonalnie, np. 'not1', 'not2' lub 'default')
+    )
 
-    -- Pętla do wysyłania powiadomień co sekundę
-    Citizen.CreateThread(function()
-        for _, data in ipairs(notifications) do
-            TriggerClientEvent('jules-notify:showNotification', src, data)
-            Citizen.Wait(1000)
-        end
-    end)
-
+    -- Testujemy również starą metodę, aby sprawdzić kompatybilność
+    TriggerClientEvent('esx:showNotification', src, 'To jest test starego systemu!', 'success')
 end, false)

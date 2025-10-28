@@ -1,53 +1,55 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const container = document.getElementById('notification-container');
+const notificationList = document.querySelector('.ios-notifications')
 
-    const icons = {
-        success: 'fa-solid fa-check-circle',
-        error: 'fa-solid fa-times-circle',
-        warning: 'fa-solid fa-exclamation-triangle',
-        info: 'fa-solid fa-info-circle'
-    };
 
-    window.addEventListener('message', (event) => {
-        const data = event.data;
+$(document).ready(function () {
 
-        if (data.action === 'showNotification') {
-            createNotification(data.title, data.message, data.type);
-        }
-    });
+  window.addEventListener('message', function (event) {
+    if (event.data.action == 'open') {
 
-    function createNotification(title, message, type = 'info') {
-        const validTypes = ['success', 'error', 'warning', 'info'];
-        const notificationType = validTypes.includes(type) ? type : 'info';
+      const Data = {
+        title: event.data.title,
+        text: event.data.message,
+        time: event.data.time,
+        appname: event.data.appname,
+        icon: event.data.icon,
+        sound: event.data.sound,
+      }
+      ShowNotification(Data)
 
-        const notif = document.createElement('div');
-        notif.classList.add('notification', notificationType);
-
-        const iconClass = icons[notificationType] || icons.info;
-
-        notif.innerHTML = `
-            <div class="icon">
-                <i class="${iconClass}"></i>
-            </div>
-            <div class="content">
-                <p class="title">${title || 'Powiadomienie'}</p>
-                <p class="message">${message || 'Brak treści.'}</p>
-            </div>
-            <div class="progress-bar"></div>
-        `;
-
-        container.appendChild(notif);
-
-        // Pokaż powiadomienie
-        setTimeout(() => {
-            notif.classList.add('show');
-        }, 100);
-
-        // Ukryj i usuń powiadomienie po 5 sekundach
-        setTimeout(() => {
-            notif.classList.remove('show');
-            // Usuń element z DOM po zakończeniu animacji
-            notif.addEventListener('transitionend', () => notif.remove());
-        }, 5000);
     }
-});
+  })
+})
+
+function ShowNotification(item) {
+    var sound = new Audio('sound/'+item.sound+'.mp3');
+  sound.volume = 0.3;
+
+  const li = document.createElement('li')
+  li.classList.add('ios-notifications__item')
+
+  li.innerHTML = `
+
+        <div class="mb-1 flex justify-between text-xs">
+          <div>
+          <i class="${item.icon}"></i>
+            <span>${item.appname}</span>
+          </div>
+          <div>teraz</div>
+        </div>
+        <div class="text-sm font-bold">${item.title}</div>
+        <div class="text-sm">${item.text}</div>
+
+      `
+  sound.play();
+  notificationList.prepend(li)
+
+
+  setTimeout(() => {
+    li.classList.add('notif-hide')
+
+    $(".notification:first-child").remove();
+
+  }, item.time);
+
+
+}
