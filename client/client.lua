@@ -50,6 +50,8 @@ local lastNotification = ""
 local lastNotificationTime = 0
 
 local function showCompatibilityNotification(...)
+    local args = table.pack(...)
+
     -- Sprawdzamy, czy to duplikat
     local currentTime = GetGameTimer()
     if (currentTime - lastNotificationTime < 100) and table.concat(args, " ") == lastNotification then
@@ -57,8 +59,6 @@ local function showCompatibilityNotification(...)
     end
     lastNotification = table.concat(args, " ")
     lastNotificationTime = currentTime
-
-    local args = table.pack(...)
 
     -- Domyślne wartości
     local message = "Brak treści."
