@@ -42,7 +42,7 @@ exports('Specjal', specjalcwel)
 
 
 -- =================================================================
--- Warstwa Kompatybilności v3 by Jules (Tłumacz Ostateczny + Filtr)
+-- Warstwa Kompatybilności v4 by Jules (Tłumacz Ostateczny)
 -- =================================================================
 
 -- Mechanizm "Anty-Duplikat"
@@ -52,20 +52,16 @@ local lastNotificationTime = 0
 local function showCompatibilityNotification(...)
     local args = table.pack(...)
 
-    -- Sprawdzamy, czy to duplikat
+    -- Anty-Duplikat
     local currentTime = GetGameTimer()
     if (currentTime - lastNotificationTime < 100) and table.concat(args, " ") == lastNotification then
-        return -- Ignoruj, jeśli to duplikat
+        return
     end
     lastNotification = table.concat(args, " ")
     lastNotificationTime = currentTime
 
     -- Domyślne wartości
-    local message = "Brak treści."
-    local title = "Powiadomienie"
-    local icon = 'fas fa-info-circle text-info'
-    local time = 7000
-
+    local message, title, icon, time = nil, "Powiadomienie", 'fas fa-info-circle text-info', 7000
     local typeToIconMap = {
         ['success'] = 'far fa-check-circle text-success', ['~g~'] = 'far fa-check-circle text-success',
         ['error'] = 'fas fa-exclamation-circle text-danger', ['~r~'] = 'fas fa-exclamation-circle text-danger',
@@ -73,40 +69,41 @@ local function showCompatibilityNotification(...)
         ['warning'] = 'fas fa-exclamation-triangle text-warning', ['~y~'] = 'fas fa-exclamation-triangle text-warning'
     }
 
-    -- Inteligentne parsowanie argumentów ("Tłumacz v3")
-    if args.n == 1 then
-        -- 1. Tylko wiadomość: esx:showNotification("Wiadomość")
-        message = tostring(args[1])
-    elseif args.n == 2 then
-        local arg1, arg2 = tostring(args[1]), tostring(args[2])
-        if typeToIconMap[arg2] then
-            -- 2. Wiadomość i typ: esx:showNotification("Wiadomość", "error")
-            message = arg1
-            icon = typeToIconMap[arg2]
-        elseif tonumber(arg2) then
-            -- 3. Wiadomość i CZAS TRWANIA: esx:showNotification("Wiadomość", 5000)
-            message = arg1
-            time = tonumber(arg2)
-        else
-            -- 4. Tytuł i wiadomość: esx:showNotification("Tytuł", "Wiadomość")
-            title = arg1
-            message = arg2
-        end
-    elseif args.n >= 3 then
-        -- 5. Tytuł, wiadomość i typ/czas: esx:showNotification("Tytuł", "Wiadomość", "success")
-        title = tostring(args[1])
-        message = tostring(args[2])
-        if typeToIconMap[tostring(args[3])] then
-            icon = typeToIconMap[tostring(args[3])]
+    -- "Tłumacz v4" - Logika ostateczna
+    local tempArgs = {}
+    for i = 1, args.n do
+        table.insert(tempArgs, tostring(args[i]))
+    end
+
+    -- 1. Znajdź i ustaw typ (ikonę)
+    for i, arg in ipairs(tempArgs) do
+        if typeToIconMap[arg] then
+            icon = typeToIconMap[arg]
+            table.remove(tempArgs, i)
+            break
         end
     end
 
-    -- Filtr "anty-śmieciowy": Ignoruje powiadomienia, gdzie tytuł i treść to tylko liczby
-    if tonumber(title) and tonumber(message) then
-        return
+    -- 2. Znajdź i ustaw czas
+    for i, arg in ipairs(tempArgs) do
+        if tonumber(arg) and tonumber(arg) > 500 then -- Uznajemy, że liczba > 500 to czas
+            time = tonumber(arg)
+            table.remove(tempArgs, i)
+            break
+        end
     end
 
-    -- Wywołujemy nową, główną funkcję `notification` z poprawnie przetłumaczonymi danymi
+    -- 3. To, co zostało, to tytuł i/lub treść
+    if #tempArgs == 1 then
+        message = tempArgs[1]
+    elseif #tempArgs >= 2 then
+        title = tempArgs[1]
+        message = tempArgs[2]
+    end
+
+    -- Jeśli po wszystkim wiadomość jest pusta, ignoruj
+    if message == nil or message == '' then return end
+
     notification(icon, "System", title, message, time, 'default')
 end
 
