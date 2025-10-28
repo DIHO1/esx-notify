@@ -1,8 +1,14 @@
 -- =================================================================
--- Oryginalny kod dostarczony przez użytkownika (bez zmian)
+-- Oryginalny kod dostarczony przez użytkownika (z modyfikacją)
 -- =================================================================
 
+-- Zmienna do śledzenia ostatniego wywołania nowoczesnej notyfikacji
+local lastModernCallTime = 0
+
 function notification(icon, appname, title, message, time, sound)
+	-- Zarejestruj czas wywołania tej funkcji (dla mechanizmu debounce)
+	lastModernCallTime = GetGameTimer()
+
 	if sound == nil then
 		sound = 'default'
 	end
@@ -18,6 +24,9 @@ function notification(icon, appname, title, message, time, sound)
 end
 
 function specjalcwel(title, text, time)
+    -- Ta funkcja również jest "nowoczesna", więc ją też śledzimy
+    lastModernCallTime = GetGameTimer()
+
 	if sound == nil then
 		sound = 'default'
 	end
@@ -42,23 +51,18 @@ exports('Specjal', specjalcwel)
 
 
 -- =================================================================
--- Warstwa Kompatybilności v4 by Jules (Tłumacz Ostateczny)
+-- Warstwa Kompatybilności v5 by Jules (Inteligentny Debounce)
 -- =================================================================
 
--- Mechanizm "Anty-Duplikat"
-local lastNotification = ""
-local lastNotificationTime = 0
-
 local function showCompatibilityNotification(...)
-    local args = table.pack(...)
-
-    -- Anty-Duplikat
-    local currentTime = GetGameTimer()
-    if (currentTime - lastNotificationTime < 100) and table.concat(args, " ") == lastNotification then
+    -- NOWY MECHANIZM DEBOUNCE
+    -- Jeśli nowoczesna (natywna) notyfikacja została wywołana w ciągu ostatnich 50ms,
+    -- całkowicie zignoruj to przestarzałe wywołanie, aby uniknąć duplikatów.
+    if (GetGameTimer() - lastModernCallTime < 50) then
         return
     end
-    lastNotification = table.concat(args, " ")
-    lastNotificationTime = currentTime
+
+    local args = table.pack(...)
 
     -- Domyślne wartości
     local message, title, icon, time = nil, "Powiadomienie", 'fas fa-info-circle text-info', 7000
@@ -104,6 +108,8 @@ local function showCompatibilityNotification(...)
     -- Jeśli po wszystkim wiadomość jest pusta, ignoruj
     if message == nil or message == '' then return end
 
+    -- Użyj oryginalnej funkcji, aby wysłać powiadomienie
+    -- To również zaktualizuje `lastModernCallTime`, zapobiegając kolejnym duplikatom
     notification(icon, "System", title, message, time, 'default')
 end
 
