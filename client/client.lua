@@ -28,3 +28,13 @@ AddEventHandler('jules-notify:showNotification', function(data)
         type = data.type or 'info'
     })
 end)
+
+-- Dodanie eksportu dla nowoczesnych wersji ESX
+exports('Notify', function(title, message, type)
+    SendNUIMessage({
+        action = 'showNotification',
+        title = title,
+        message = message,
+        type = type
+    })
+end)
