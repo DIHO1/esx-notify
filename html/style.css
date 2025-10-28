@@ -20,7 +20,7 @@ body {
 .notification {
     display: flex;
     align-items: flex-start;
-    background-color: rgba(20, 20, 20, 0.85);
+    background-color: rgba(20, 20, 20, 0.6);
     color: #f1f1f1;
     border-radius: 10px;
     margin-bottom: 15px;
