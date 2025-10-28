@@ -17,10 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function createNotification(title, message, type = 'info') {
-        const notif = document.createElement('div');
-        notif.classList.add('notification', type);
+        const validTypes = ['success', 'error', 'warning', 'info'];
+        const notificationType = validTypes.includes(type) ? type : 'info';
 
-        const iconClass = icons[type] || icons.info;
+        const notif = document.createElement('div');
+        notif.classList.add('notification', notificationType);
+
+        const iconClass = icons[notificationType] || icons.info;
 
         notif.innerHTML = `
             <div class="icon">
