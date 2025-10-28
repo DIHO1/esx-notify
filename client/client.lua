@@ -55,6 +55,11 @@ local function showSuperIntelligentNotification(...)
     data.message = data.message or 'Brak treści.'
     data.type = data.type or 'info'
 
+    -- Filtr "anty-śmieciowy": Ignoruj powiadomienia, gdzie tytuł i treść to tylko liczby.
+    if tonumber(data.title) and tonumber(data.message) then
+        return
+    end
+
     SendNUIMessage(data)
 end
 
