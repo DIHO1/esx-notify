@@ -1,36 +1,36 @@
--- Rejestracja komendy do testowania powiadomień
+-- Zaktualizowana komenda do testowania nowych powiadomień
 RegisterCommand('testnotify', function(source, args, rawCommand)
     local src = source
 
-    -- Powiadomienie o sukcesie
-    TriggerClientEvent('jules-notify:showNotification', src, {
-        message = 'To jest testowe powiadomienie o sukcesie!',
-        type = 'success'
-    })
+    local notifications = {
+        {
+            title = 'Sukces',
+            message = 'Operacja zakończyła się pomyślnie. Gratulacje!',
+            type = 'success'
+        },
+        {
+            title = 'Błąd Krytyczny',
+            message = 'Nie udało się połączyć z serwerem. Sprawdź swoje połączenie.',
+            type = 'error'
+        },
+        {
+            title = 'Informacja',
+            message = 'Serwer zostanie zrestartowany za 15 minut. Zapisz swoje postępy.',
+            type = 'info'
+        },
+        {
+            title = 'Ostrzeżenie',
+            message = 'Twoje konto bankowe jest na minusie. Spłać dług jak najszybciej.',
+            type = 'warning'
+        }
+    }
 
-    -- Odczekaj chwilę przed wysłaniem kolejnego powiadomienia
-    Citizen.Wait(1000)
+    -- Pętla do wysyłania powiadomień co sekundę
+    Citizen.CreateThread(function()
+        for _, data in ipairs(notifications) do
+            TriggerClientEvent('jules-notify:showNotification', src, data)
+            Citizen.Wait(1000)
+        end
+    end)
 
-    -- Powiadomienie o błędzie
-    TriggerClientEvent('jules-notify:showNotification', src, {
-        message = 'Uwaga! Wystąpił błąd.',
-        type = 'error'
-    })
-
-    Citizen.Wait(1000)
-
-    -- Powiadomienie informacyjne
-    TriggerClientEvent('jules-notify:showNotification', src, {
-        message = 'To jest zwykła informacja dla Ciebie.',
-        type = 'info'
-    })
-
-    Citizen.Wait(1000)
-
-    -- Powiadomienie ostrzegawcze
-    TriggerClientEvent('jules-notify:showNotification', src, {
-        message = 'Lepiej uważaj, to jest ostrzeżenie.',
-        type = 'warning'
-    })
-
-end, false) -- false oznacza, że komenda nie jest zablokowana dla graczy
+end, false)

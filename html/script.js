@@ -1,18 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('notification-container');
 
+    const icons = {
+        success: 'fa-solid fa-check-circle',
+        error: 'fa-solid fa-times-circle',
+        warning: 'fa-solid fa-exclamation-triangle',
+        info: 'fa-solid fa-info-circle'
+    };
+
     window.addEventListener('message', (event) => {
         const data = event.data;
 
         if (data.action === 'showNotification') {
-            createNotification(data.message, data.type);
+            createNotification(data.title, data.message, data.type);
         }
     });
 
-    function createNotification(message, type = 'info') {
+    function createNotification(title, message, type = 'info') {
         const notif = document.createElement('div');
         notif.classList.add('notification', type);
-        notif.textContent = message;
+
+        const iconClass = icons[type] || icons.info;
+
+        notif.innerHTML = `
+            <div class="icon">
+                <i class="${iconClass}"></i>
+            </div>
+            <div class="content">
+                <p class="title">${title || 'Powiadomienie'}</p>
+                <p class="message">${message || 'Brak treści.'}</p>
+            </div>
+            <div class="progress-bar"></div>
+        `;
 
         container.appendChild(notif);
 
@@ -24,12 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ukryj i usuń powiadomienie po 5 sekundach
         setTimeout(() => {
             notif.classList.remove('show');
-            notif.classList.add('hide');
-
             // Usuń element z DOM po zakończeniu animacji
-            notif.addEventListener('transitionend', () => {
-                notif.remove();
-            });
+            notif.addEventListener('transitionend', () => notif.remove());
         }, 5000);
     }
 });
