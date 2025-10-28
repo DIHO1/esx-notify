@@ -40,7 +40,10 @@ function ShowNotification(item) {
         <div class="text-sm">${item.text}</div>
 
       `
-  sound.play();
+  // Uodpornienie na błędy: próbuj odtworzyć dźwięk, ale nie przerywaj działania skryptu, jeśli się nie uda.
+  sound.play().catch(function(error) {
+    // console.log('Nie można odtworzyć dźwięku, prawdopodobnie brakuje pliku: ' + error);
+  });
   notificationList.prepend(li)
 
 
